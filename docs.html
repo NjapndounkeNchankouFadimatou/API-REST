@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog API – Docs</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0d1117; color: #e6edf3; min-height: 100vh; }
+
+  /* Header */
+  .header { background: #161b22; border-bottom: 1px solid #30363d; padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+  .logo { font-size: 1.3rem; font-weight: 700; color: #58a6ff; letter-spacing: -0.5px; }
+  .version-badge { background: #1f6feb33; color: #58a6ff; border: 1px solid #1f6feb; font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: 600; }
+  .desc { color: #8b949e; font-size: 13px; }
+
+  /* Layout */
+  .container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+  .section-title { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #8b949e; margin: 2rem 0 0.75rem; }
+
+  /* Endpoint card */
+  .endpoint { border: 1px solid #30363d; border-radius: 8px; margin-bottom: 10px; overflow: hidden; background: #161b22; }
+  .endpoint-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; user-select: none; transition: background 0.15s; }
+  .endpoint-header:hover { background: #1c2128; }
+  .method { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 4px; min-width: 60px; text-align: center; letter-spacing: 0.5px; }
+  .method.GET    { background: #1a4a1a; color: #3fb950; border: 1px solid #238636; }
+  .method.POST   { background: #1a2f4a; color: #58a6ff; border: 1px solid #1f6feb; }
+  .method.PUT    { background: #3a2a0a; color: #e3b341; border: 1px solid #9e6a03; }
+  .method.DELETE { background: #3a1a1a; color: #f85149; border: 1px solid #da3633; }
+  .path { font-family: 'Courier New', monospace; font-size: 14px; color: #e6edf3; flex: 1; }
+  .summary { font-size: 13px; color: #8b949e; }
+  .chevron { color: #8b949e; font-size: 12px; transition: transform 0.2s; margin-left: auto; }
+  .endpoint.open .chevron { transform: rotate(180deg); }
+
+  /* Expanded panel */
+  .endpoint-body { display: none; border-top: 1px solid #30363d; padding: 20px; }
+  .endpoint.open .endpoint-body { display: block; }
+
+  /* Params */
+  .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #8b949e; margin-bottom: 8px; }
+  .field-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .field-name { font-family: 'Courier New', monospace; font-size: 13px; color: #e6edf3; min-width: 100px; }
+  .required { color: #f85149; font-size: 10px; font-weight: 700; }
+  .optional { color: #8b949e; font-size: 10px; }
+  input[type=text], textarea, select {
+    background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3;
+    font-size: 13px; padding: 6px 10px; outline: none; transition: border-color 0.15s;
+    font-family: 'Courier New', monospace; width: 100%;
+  }
+  input[type=text]:focus, textarea:focus { border-color: #58a6ff; }
+  textarea { resize: vertical; min-height: 80px; }
+  .field-type { color: #8b949e; font-size: 11px; }
+
+  /* Execute button */
+  .execute-btn {
+    background: #238636; color: #fff; border: none; padding: 8px 20px; border-radius: 6px;
+    font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 16px; transition: background 0.15s;
+  }
+  .execute-btn:hover { background: #2ea043; }
+  .execute-btn:active { background: #196c2e; }
+  .clear-btn {
+    background: transparent; color: #8b949e; border: 1px solid #30363d; padding: 8px 16px;
+    border-radius: 6px; font-size: 13px; cursor: pointer; margin-top: 16px; margin-left: 8px; transition: all 0.15s;
+  }
+  .clear-btn:hover { border-color: #8b949e; color: #e6edf3; }
+
+  /* Response */
+  .response-box { margin-top: 20px; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; }
+  .response-header { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: #1c2128; border-bottom: 1px solid #30363d; }
+  .status-code { font-size: 13px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+  .status-2xx { background: #1a4a1a; color: #3fb950; }
+  .status-4xx { background: #3a1a1a; color: #f85149; }
+  .status-5xx { background: #3a1a1a; color: #f85149; }
+  .curl-copy { font-size: 11px; color: #8b949e; cursor: pointer; margin-left: auto; padding: 3px 8px; border: 1px solid #30363d; border-radius: 4px; }
+  .curl-copy:hover { color: #e6edf3; }
+  pre.response-body { padding: 14px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6; overflow-x: auto; background: #0d1117; white-space: pre-wrap; word-break: break-all; }
+  .loading { color: #8b949e; font-size: 13px; padding: 12px 14px; }
+
+  /* Schema box */
+  .schema-box { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 12px 14px; margin-top: 8px; }
+  pre.schema { font-family: 'Courier New', monospace; font-size: 12px; color: #8b949e; line-height: 1.6; white-space: pre-wrap; }
+
+  /* Colors for JSON */
+  .json-key    { color: #79c0ff; }
+  .json-str    { color: #a5d6ff; }
+  .json-num    { color: #f2cc60; }
+  .json-bool   { color: #ff7b72; }
+  .json-null   { color: #8b949e; }
+
+  .divider { border: none; border-top: 1px solid #21262d; margin: 8px 0; }
+  .tip { font-size: 12px; color: #8b949e; margin-top: 6px; }
+  .curl-preview { font-family: 'Courier New', monospace; font-size: 11px; color: #8b949e; word-break: break-all; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Blog API</div>
+  <span class="version-badge">v1.0.0</span>
+  <span class="desc">INF222 – EC1 TAF1 | Flask + SQLite</span>
+</div>
+
+<div class="container">
+
+  <div class="section-title">Articles</div>
+
+  <!-- ── POST /api/articles ── -->
+  <div class="endpoint" id="ep-post-articles">
+    <div class="endpoint-header" onclick="toggle('ep-post-articles')">
+      <span class="method POST">POST</span>
+      <span class="path">/api/articles</span>
+      <span class="summary">Créer un article</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <div class="label">Corps de la requête (JSON)</div>
+      <div class="schema-box">
+        <pre class="schema">{
+  "titre":     <span style="color:#a5d6ff">"string"</span>  <span class="required">*requis</span>
+  "contenu":   <span style="color:#a5d6ff">"string"</span>  <span class="required">*requis</span>
+  "auteur":    <span style="color:#a5d6ff">"string"</span>  <span class="required">*requis</span>
+  "categorie": <span style="color:#a5d6ff">"string"</span>  <span class="required">*requis</span>
+  "date":      <span style="color:#a5d6ff">"YYYY-MM-DD"</span>  <span class="optional">optionnel</span>
+  "tags":      <span style="color:#a5d6ff">["string"]</span>  <span class="optional">optionnel</span>
+}</pre>
+      </div>
+      <textarea id="body-post-articles" style="margin-top:12px" rows="7">{
+  "titre": "Introduction à Flask",
+  "contenu": "Flask est un micro-framework Python très populaire.",
+  "auteur": "Alice",
+  "categorie": "Technologie",
+  "tags": ["python", "flask", "web"]
+}</textarea>
+      <div>
+        <button class="execute-btn" onclick="execute('POST','/api/articles',null,'body-post-articles','res-post-articles')">▶ Exécuter</button>
+        <button class="clear-btn" onclick="clearRes('res-post-articles')">Effacer</button>
+      </div>
+      <div id="res-post-articles"></div>
+    </div>
+  </div>
+
+  <!-- ── GET /api/articles ── -->
+  <div class="endpoint" id="ep-get-articles">
+    <div class="endpoint-header" onclick="toggle('ep-get-articles')">
+      <span class="method GET">GET</span>
+      <span class="path">/api/articles</span>
+      <span class="summary">Lister / filtrer les articles</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <div class="label">Paramètres optionnels (query string)</div>
+      <div class="field-row"><span class="field-name">categorie</span><span class="optional">optionnel</span><input type="text" id="p-get-categorie" placeholder="ex: Technologie"></div>
+      <div class="field-row"><span class="field-name">auteur</span><span class="optional">optionnel</span><input type="text" id="p-get-auteur" placeholder="ex: Alice"></div>
+      <div class="field-row"><span class="field-name">date</span><span class="optional">optionnel</span><input type="text" id="p-get-date" placeholder="ex: 2026-03-23"></div>
+      <div>
+        <button class="execute-btn" onclick="executeGetArticles()">▶ Exécuter</button>
+        <button class="clear-btn" onclick="clearRes('res-get-articles')">Effacer</button>
+      </div>
+      <div id="res-get-articles"></div>
+    </div>
+  </div>
+
+  <!-- ── GET /api/articles/search ── -->
+  <div class="endpoint" id="ep-search">
+    <div class="endpoint-header" onclick="toggle('ep-search')">
+      <span class="method GET">GET</span>
+      <span class="path">/api/articles/search</span>
+      <span class="summary">Rechercher dans titre et contenu</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <div class="label">Paramètre de recherche</div>
+      <div class="field-row"><span class="field-name">query</span><span class="required">*requis</span><input type="text" id="p-search-query" placeholder="ex: flask"></div>
+      <div>
+        <button class="execute-btn" onclick="executeSearch()">▶ Exécuter</button>
+        <button class="clear-btn" onclick="clearRes('res-search')">Effacer</button>
+      </div>
+      <div id="res-search"></div>
+    </div>
+  </div>
+
+  <!-- ── GET /api/articles/{id} ── -->
+  <div class="endpoint" id="ep-get-one">
+    <div class="endpoint-header" onclick="toggle('ep-get-one')">
+      <span class="method GET">GET</span>
+      <span class="path">/api/articles/{id}</span>
+      <span class="summary">Lire un article par ID</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <div class="field-row"><span class="field-name">id</span><span class="required">*requis</span><input type="text" id="p-get-one-id" placeholder="ex: 1" style="max-width:120px"></div>
+      <div>
+        <button class="execute-btn" onclick="executeWithId('GET','/api/articles/','p-get-one-id',null,'res-get-one')">▶ Exécuter</button>
+        <button class="clear-btn" onclick="clearRes('res-get-one')">Effacer</button>
+      </div>
+      <div id="res-get-one"></div>
+    </div>
+  </div>
+
+  <!-- ── PUT /api/articles/{id} ── -->
+  <div class="endpoint" id="ep-put">
+    <div class="endpoint-header" onclick="toggle('ep-put')">
+      <span class="method PUT">PUT</span>
+      <span class="path">/api/articles/{id}</span>
+      <span class="summary">Modifier un article</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <div class="field-row"><span class="field-name">id</span><span class="required">*requis</span><input type="text" id="p-put-id" placeholder="ex: 1" style="max-width:120px"></div>
+      <div class="label" style="margin-top:12px">Corps (champs à modifier)</div>
+      <textarea id="body-put" rows="5">{
+  "titre": "Nouveau titre",
+  "categorie": "Dev",
+  "tags": ["python", "api"]
+}</textarea>
+      <div>
+        <button class="execute-btn" onclick="executeWithId('PUT','/api/articles/','p-put-id','body-put','res-put')">▶ Exécuter</button>
+        <button class="clear-btn" onclick="clearRes('res-put')">Effacer</button>
+      </div>
+      <div id="res-put"></div>
+    </div>
+  </div>
+
+  <!-- ── DELETE /api/articles/{id} ── -->
+  <div class="endpoint" id="ep-delete">
+    <div class="endpoint-header" onclick="toggle('ep-delete')">
+      <span class="method DELETE">DELETE</span>
+      <span class="path">/api/articles/{id}</span>
+      <span class="summary">Supprimer un article</span>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <div class="field-row"><span class="field-name">id</span><span class="required">*requis</span><input type="text" id="p-delete-id" placeholder="ex: 1" style="max-width:120px"></div>
+      <div>
+        <button class="execute-btn" style="background:#8b2020;" onmouseover="this.style.background='#a32d2d'" onmouseout="this.style.background='#8b2020'" onclick="executeWithId('DELETE','/api/articles/','p-delete-id',null,'res-delete')">▶ Exécuter</button>
+        <button class="clear-btn" onclick="clearRes('res-delete')">Effacer</button>
+      </div>
+      <div id="res-delete"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const BASE = 'http://127.0.0.1:5000';
+
+function toggle(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+function clearRes(id) {
+  document.getElementById(id).innerHTML = '';
+}
+
+function syntaxHighlight(json) {
+  if (typeof json !== 'string') json = JSON.stringify(json, null, 2);
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+    if (/^"/.test(m)) return /:$/.test(m) ? `<span class="json-key">${m}</span>` : `<span class="json-str">${m}</span>`;
+    if (/true|false/.test(m)) return `<span class="json-bool">${m}</span>`;
+    if (/null/.test(m)) return `<span class="json-null">${m}</span>`;
+    return `<span class="json-num">${m}</span>`;
+  });
+}
+
+function renderResponse(containerId, status, data, curlCmd) {
+  const cls = status >= 200 && status < 300 ? 'status-2xx' : status >= 400 && status < 500 ? 'status-4xx' : 'status-5xx';
+  const body = JSON.stringify(data, null, 2);
+  document.getElementById(containerId).innerHTML = `
+    <div class="response-box">
+      <div class="response-header">
+        <span class="status-code ${cls}">${status}</span>
+        <span style="font-size:12px;color:#8b949e">${status >= 200 && status < 300 ? 'Succès' : 'Erreur'}</span>
+        <span class="curl-copy" onclick="navigator.clipboard.writeText(${JSON.stringify(curlCmd)});this.textContent='Copié!';setTimeout(()=>this.textContent='Copier curl',1500)">Copier curl</span>
+      </div>
+      <pre class="response-body">${syntaxHighlight(body)}</pre>
+    </div>
+    <p class="tip" style="margin-top:6px;font-size:11px;font-family:monospace;color:#484f58;word-break:break-all">${curlCmd}</p>
+  `;
+}
+
+function renderError(containerId, err) {
+  document.getElementById(containerId).innerHTML = `<div class="response-box"><pre class="response-body" style="color:#f85149">❌ Impossible de contacter le serveur.\n\nAssurez-vous que Flask tourne sur ${BASE}\n\n$ python app.py\n\nErreur: ${err}</pre></div>`;
+}
+
+async function execute(method, path, params, bodyId, resId) {
+  let url = BASE + path;
+  if (params) url += '?' + new URLSearchParams(params).toString();
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  let bodyStr = '';
+  if (bodyId) {
+    bodyStr = document.getElementById(bodyId).value;
+    opts.body = bodyStr;
+  }
+  const curlBody = bodyStr ? ` -d '${bodyStr.replace(/\s+/g,' ')}'` : '';
+  const curl = `curl -X ${method} "${url}" -H "Content-Type: application/json"${curlBody}`;
+  document.getElementById(resId).innerHTML = '<p class="loading">En cours...</p>';
+  try {
+    const r = await fetch(url, opts);
+    const data = await r.json();
+    renderResponse(resId, r.status, data, curl);
+  } catch(e) { renderError(resId, e.message); }
+}
+
+function executeGetArticles() {
+  const params = {};
+  const c = document.getElementById('p-get-categorie').value.trim();
+  const a = document.getElementById('p-get-auteur').value.trim();
+  const d = document.getElementById('p-get-date').value.trim();
+  if (c) params.categorie = c;
+  if (a) params.auteur = a;
+  if (d) params.date = d;
+  execute('GET', '/api/articles', Object.keys(params).length ? params : null, null, 'res-get-articles');
+}
+
+function executeSearch() {
+  const q = document.getElementById('p-search-query').value.trim();
+  if (!q) { document.getElementById('res-search').innerHTML = '<p class="loading" style="color:#f85149">Veuillez saisir un terme de recherche.</p>'; return; }
+  execute('GET', '/api/articles/search', { query: q }, null, 'res-search');
+}
+
+function executeWithId(method, basePath, idInputId, bodyId, resId) {
+  const id = document.getElementById(idInputId).value.trim();
+  if (!id) { document.getElementById(resId).innerHTML = '<p class="loading" style="color:#f85149">Veuillez saisir un ID.</p>'; return; }
+  execute(method, basePath + id, null, bodyId, resId);
+}
+</script>
+</body>
+</html>
